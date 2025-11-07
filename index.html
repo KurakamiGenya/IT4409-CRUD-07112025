@@ -58,9 +58,16 @@
     <script type="text/babel">
         function SearchForm({ onChangeValue }) {
             return (
-                <input type="text" placeholder="Tìm theo name, username" onChange={e => onChangeValue(e.target.value)} />
+                <div style={{ marginBottom: 12 }}>
+                    <input
+                        type="text"
+                        placeholder="Tìm theo name, username"
+                        onChange={(e) => onChangeValue(e.target.value)}
+                    />
+                </div>
             );
         }
+
 
         function AddUser({ onAdd }) {
             // sẽ bổ sung code chi tiết ở Giai đoạn 5
