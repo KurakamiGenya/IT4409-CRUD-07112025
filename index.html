@@ -75,9 +75,94 @@
         }
 
         function ResultTable({ keyword, user, onAdded }) {
-            // sẽ bổ sung code chi tiết ở Giai đoạn 4
-            return <div> /* UI ResultTable */ </div>;
+            const [users, setUsers] = React.useState([]);
+            const [loading, setLoading] = React.useState(true);
+            const [editing, setEditing] = React.useState(null);
+
+            // 1) Tải dữ liệu 1 lần khi mount
+            React.useEffect(() => {
+                fetch("https://jsonplaceholder.typicode.com/users")
+                    .then(res => res.json())
+                    .then(data => { setUsers(data); setLoading(false); })
+                    .catch(err => { console.error(err); setLoading(false); });
+            }, []);
+
+            // 2) Nếu có new user được thêm từ AddUser (prop user), cập nhật list
+            React.useEffect(() => {
+                if (user) {
+                    setUsers(prev => [...prev, { ...user, id: prev.length + 1 }]);
+                    onAdded();
+                }
+            }, [user]);
+
+            // 3) Lọc theo keyword
+            const filteredUsers = users.filter(u =>
+                u.name.toLowerCase().includes(keyword.toLowerCase()) ||
+                u.username.toLowerCase().includes(keyword.toLowerCase())
+            );
+
+            // 4) Xóa
+            const removeUser = (id) => {
+                setUsers(prev => prev.filter(u => u.id !== id));
+            };
+
+            // 5) Sửa (setEditing) và lưu (saveUser)
+            const editUser = (u) => setEditing({ ...u, address: { ...(u.address || {}) } }); // deep copy shallow
+            const handleEditChange = (field, value) => {
+                setEditing(prev => ({ ...prev, [field]: value }));
+            };
+            const saveUser = () => {
+                setUsers(prev => prev.map(u => u.id === editing.id ? editing : u));
+                setEditing(null);
+            };
+
+            if (loading) return <div>Đang tải dữ liệu...</div>;
+
+            return (
+                <div style={{ marginTop: 12 }}>
+                    <table>
+                        <thead>
+                            <tr><th>ID</th><th>Name</th><th>Username</th><th>Email</th><th>City</th><th>Hành động</th></tr>
+                        </thead>
+                        <tbody>
+                            {filteredUsers.map(u => (
+                                <tr key={u.id}>
+                                    <td>{u.id}</td>
+                                    <td>{u.name}</td>
+                                    <td>{u.username}</td>
+                                    <td>{u.email}</td>
+                                    <td>{u.address?.city || ''}</td>
+                                    <td>
+                                        <button className="btn btn-edit" onClick={() => editUser(u)}>Sửa</button>
+                                        <button className="btn btn-delete" onClick={() => removeUser(u.id)}>Xóa</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    {/* Form sửa đơn giản (modal/trang con có thể làm sau) */}
+                    {editing && (
+                        <div style={{ marginTop: 12, padding: 10, border: '1px solid #ccc' }}>
+                            <h4>Chỉnh sửa ID: {editing.id}</h4>
+                            <div>
+                                <label>Name: </label>
+                                <input value={editing.name} onChange={e => handleEditChange('name', e.target.value)} />
+                            </div>
+                            <div>
+                                <label>Username: </label>
+                                <input value={editing.username} onChange={e => handleEditChange('username', e.target.value)} />
+                            </div>
+                            <div style={{ marginTop: 6 }}>
+                                <button className="btn" onClick={saveUser}>Lưu</button>
+                                <button className="btn" onClick={() => setEditing(null)}>Hủy</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
         }
+
 
         function App() {
             const [kw, setKeyword] = React.useState("");
